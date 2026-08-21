@@ -51,23 +51,6 @@ def fetch_all_bookings(api_key: str) -> list[dict]:
     print(f"RoomIds={EXTRA_ROOM_IDS} -> {len(combined)} bookings", file=sys.stderr)
     room_bookings.extend(combined)
     merged = {b["BookingId"]: b for b in school_bookings + room_bookings}
-
-    # diagnostics: check if the filtered list vs. full paged query vs. single-booking lookup differ
-    for b in merged.values():
-        slots = b.get("TimeSlots", [])
-        dates = sorted(s["BookingDate"][:10] for s in slots)
-        print(
-            f"BookingId={b['BookingId']} Title={b.get('Title')!r} slots={len(slots)} "
-            f"range={dates[0] if dates else None}..{dates[-1] if dates else None}",
-            file=sys.stderr,
-        )
-    r = requests.get(f"{API_BASE}/playbooking/50", headers={"Authorization": api_key}, timeout=30)
-    print(f"GET playbooking/50 -> {r.status_code}", file=sys.stderr)
-    if r.ok:
-        detail = r.json()
-        detail_slots = detail.get("TimeSlots", [])
-        print(f"  direct lookup slots={len(detail_slots)}", file=sys.stderr)
-
     return list(merged.values())
 
 
