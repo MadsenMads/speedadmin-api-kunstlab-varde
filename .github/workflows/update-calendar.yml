@@ -1,0 +1,33 @@
+name: Update KunstLab Varde calendar
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-calendar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - run: python scripts/generate_calendar.py
+        env:
+          SPEEDADMIN_API_KEY: ${{ secrets.SPEEDADMIN_API_KEY }}
+
+      - name: Commit updated feed if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/kunstlab-varde.ics
+          git diff --cached --quiet || git commit -m "Update KunstLab Varde calendar feed"
+          git push
