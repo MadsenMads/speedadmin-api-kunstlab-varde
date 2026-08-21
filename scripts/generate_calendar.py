@@ -10,6 +10,7 @@ from icalendar import Calendar, Event, vText
 
 API_BASE = "https://api.speedadmin.dk/v1"
 SCHOOL_ID = 6655
+EXTRA_ROOM_IDS = [10225, 10233]
 SCHOOL_NAME = "KunstLab Varde"
 TIMEZONE = zoneinfo.ZoneInfo("Europe/Copenhagen")
 DAYS_PAST = 7
@@ -17,12 +18,12 @@ DAYS_FUTURE = 360
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "..", "docs", "kunstlab-varde.ics")
 
 
-def fetch_bookings(api_key: str) -> list[dict]:
+def fetch_bookings(api_key: str, **filters) -> list[dict]:
     now = datetime.datetime.now(TIMEZONE)
     body = {
-        "CourseSchoolIds": [SCHOOL_ID],
         "DateFrom": (now - datetime.timedelta(days=DAYS_PAST)).isoformat(),
         "DateTo": (now + datetime.timedelta(days=DAYS_FUTURE)).isoformat(),
+        **filters,
     }
     response = requests.post(
         f"{API_BASE}/playbooking",
@@ -32,6 +33,14 @@ def fetch_bookings(api_key: str) -> list[dict]:
     )
     response.raise_for_status()
     return response.json()
+
+
+def fetch_all_bookings(api_key: str) -> list[dict]:
+    # separate calls per filter since CourseSchoolIds/RoomIds combine with AND, not OR
+    school_bookings = fetch_bookings(api_key, CourseSchoolIds=[SCHOOL_ID])
+    room_bookings = fetch_bookings(api_key, RoomIds=EXTRA_ROOM_IDS)
+    merged = {b["BookingId"]: b for b in school_bookings + room_bookings}
+    return list(merged.values())
 
 
 def build_calendar(bookings: list[dict]) -> Calendar:
@@ -72,7 +81,7 @@ def main() -> None:
         print("SPEEDADMIN_API_KEY is not set", file=sys.stderr)
         sys.exit(1)
 
-    bookings = fetch_bookings(api_key)
+    bookings = fetch_all_bookings(api_key)
     calendar = build_calendar(bookings)
 
     output_path = os.path.abspath(OUTPUT_PATH)
