@@ -39,6 +39,12 @@ def fetch_all_bookings(api_key: str) -> list[dict]:
     # separate calls per filter since CourseSchoolIds/RoomIds combine with AND, not OR
     school_bookings = fetch_bookings(api_key, CourseSchoolIds=[SCHOOL_ID])
     print(f"CourseSchoolIds=[{SCHOOL_ID}] -> {len(school_bookings)} bookings", file=sys.stderr)
+
+    # diagnostics: confirm RoomId vs RoomMasterResourceId, since playbooking may filter on the latter
+    for room_id in EXTRA_ROOM_IDS:
+        r = requests.get(f"{API_BASE}/rooms/{room_id}", headers={"Authorization": api_key}, timeout=30)
+        print(f"GET rooms/{room_id} -> {r.status_code} {r.text}", file=sys.stderr)
+
     room_bookings = []
     for room_id in EXTRA_ROOM_IDS:
         result = fetch_bookings(api_key, RoomIds=[room_id])
