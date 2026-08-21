@@ -44,6 +44,11 @@ def fetch_all_bookings(api_key: str) -> list[dict]:
         result = fetch_bookings(api_key, RoomIds=[room_id])
         print(f"RoomIds=[{room_id}] -> {len(result)} bookings", file=sys.stderr)
         room_bookings.extend(result)
+    # also query the rooms together, in case the API matches on the exact room set
+    # rather than "any of" for bookings that use both rooms at once
+    combined = fetch_bookings(api_key, RoomIds=EXTRA_ROOM_IDS)
+    print(f"RoomIds={EXTRA_ROOM_IDS} -> {len(combined)} bookings", file=sys.stderr)
+    room_bookings.extend(combined)
     merged = {b["BookingId"]: b for b in school_bookings + room_bookings}
     return list(merged.values())
 
