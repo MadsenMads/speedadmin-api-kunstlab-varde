@@ -34,10 +34,6 @@ def fetch_bookings(api_key: str) -> list[dict]:
     return response.json()
 
 
-def resource_summary(resources: list[dict]) -> str:
-    return ", ".join(f"{r.get('Name')} ({r.get('Role')})" for r in resources if r.get("Name"))
-
-
 def build_calendar(bookings: list[dict]) -> Calendar:
     cal = Calendar()
     cal.add("prodid", "-//SpeedAdmin Booking Sync//kunstlab-varde//")
@@ -51,7 +47,6 @@ def build_calendar(bookings: list[dict]) -> Calendar:
     for booking in bookings:
         booking_id = booking.get("BookingId")
         title = booking.get("Title") or booking.get("CourseName") or "Booking"
-        description = booking.get("Description") or ""
         for slot in booking.get("TimeSlots", []):
             booking_date = datetime.date.fromisoformat(slot["BookingDate"][:10])
             start_time = datetime.time.fromisoformat(slot["StartTime"][:8])
@@ -63,10 +58,6 @@ def build_calendar(bookings: list[dict]) -> Calendar:
             # UID must stay stable across regenerations so clients don't churn duplicate events
             event.add("uid", f"speedadmin-{booking_id}-{dtstart.isoformat()}@kunstlab-varde")
             event.add("summary", vText(title))
-            resources = resource_summary(booking.get("TeacherAndRoomOnNextTimeSlot", []))
-            full_description = "\n".join(filter(None, [description, resources]))
-            if full_description:
-                event.add("description", vText(full_description))
             event.add("dtstart", dtstart)
             event.add("dtend", dtend)
             event.add("dtstamp", datetime.datetime.now(datetime.timezone.utc))
