@@ -45,8 +45,8 @@ def build_calendar(bookings: list[dict]) -> Calendar:
     cal.add("x-wr-calname", SCHOOL_NAME)
     cal.add("x-wr-timezone", str(TIMEZONE))
     # hints only; clients like Google Calendar decide their own poll cadence regardless
-    cal.add("x-published-ttl", "PT1H")
-    cal.add("refresh-interval", "PT1H")
+    cal.add("x-published-ttl", datetime.timedelta(hours=1))
+    cal.add("refresh-interval", datetime.timedelta(hours=1))
 
     for booking in bookings:
         booking_id = booking.get("BookingId")
