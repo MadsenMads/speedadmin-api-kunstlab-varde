@@ -38,9 +38,12 @@ def fetch_bookings(api_key: str, **filters) -> list[dict]:
 def fetch_all_bookings(api_key: str) -> list[dict]:
     # separate calls per filter since CourseSchoolIds/RoomIds combine with AND, not OR
     school_bookings = fetch_bookings(api_key, CourseSchoolIds=[SCHOOL_ID])
-    room_bookings = fetch_bookings(api_key, RoomIds=EXTRA_ROOM_IDS)
     print(f"CourseSchoolIds=[{SCHOOL_ID}] -> {len(school_bookings)} bookings", file=sys.stderr)
-    print(f"RoomIds={EXTRA_ROOM_IDS} -> {len(room_bookings)} bookings", file=sys.stderr)
+    room_bookings = []
+    for room_id in EXTRA_ROOM_IDS:
+        result = fetch_bookings(api_key, RoomIds=[room_id])
+        print(f"RoomIds=[{room_id}] -> {len(result)} bookings", file=sys.stderr)
+        room_bookings.extend(result)
     merged = {b["BookingId"]: b for b in school_bookings + room_bookings}
     return list(merged.values())
 
