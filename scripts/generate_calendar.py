@@ -9,7 +9,6 @@ import requests
 from icalendar import Calendar, Event, vText
 
 API_BASE = "https://api.speedadmin.dk/v1"
-SCHOOL_ID = 6655
 EXTRA_ROOM_IDS = [10225, 10233]
 SCHOOL_NAME = "KunstLab Varde"
 TIMEZONE = zoneinfo.ZoneInfo("Europe/Copenhagen")
@@ -36,10 +35,6 @@ def fetch_bookings(api_key: str, **filters) -> list[dict]:
 
 
 def fetch_all_bookings(api_key: str) -> list[dict]:
-    # separate calls per filter since CourseSchoolIds/RoomIds combine with AND, not OR
-    school_bookings = fetch_bookings(api_key, CourseSchoolIds=[SCHOOL_ID])
-    print(f"CourseSchoolIds=[{SCHOOL_ID}] -> {len(school_bookings)} bookings", file=sys.stderr)
-
     room_bookings = []
     for room_id in EXTRA_ROOM_IDS:
         result = fetch_bookings(api_key, RoomIds=[room_id])
@@ -50,7 +45,7 @@ def fetch_all_bookings(api_key: str) -> list[dict]:
     combined = fetch_bookings(api_key, RoomIds=EXTRA_ROOM_IDS)
     print(f"RoomIds={EXTRA_ROOM_IDS} -> {len(combined)} bookings", file=sys.stderr)
     room_bookings.extend(combined)
-    merged = {b["BookingId"]: b for b in school_bookings + room_bookings}
+    merged = {b["BookingId"]: b for b in room_bookings}
     return list(merged.values())
 
 
