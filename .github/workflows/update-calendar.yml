@@ -1,4 +1,4 @@
-name: Update KunstLab Varde calendar
+﻿name: Update KunstLab Varde calendar
 
 on:
   schedule:
@@ -31,3 +31,4 @@ jobs:
           git add docs/kunstlab-varde.ics
           git diff --cached --quiet || git commit -m "Update KunstLab Varde calendar feed"
           git push
+
